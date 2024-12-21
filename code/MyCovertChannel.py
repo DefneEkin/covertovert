@@ -12,48 +12,46 @@ class MyCovertChannel(CovertChannelBase):
 
     def send(self, log_file_name, send_0_wait, send_1_wait):
         """
-        Send a covert message using ARP packets and inter-packet timing.
+        Send a random covert message using ARP packets and inter-packet timing. Send a stopping signal
+        at the end and wait a small amount to ensure the receiver has received the message.
 
         Args:
             log_file_name (str): Name of the log file to record the sent message.
-            parameter1: Placeholder parameter.
-            parameter2: Placeholder parameter.
+            send_0_wait: Time (in milliseconds) to wait between packets to send bit 0
+            send_1_wait: Time (in milliseconds) to wait between packets to send bit 1
         """
-        # Generate a binary message to send
+       
         binary_message = self.generate_random_binary_message_with_logging(str(log_file_name))
 
         for bit in binary_message:
-            # Create an ARP packet
             packet = Ether(dst = "ff:ff:ff:ff:ff:ff") / ARP(pdst="172.18.0.3") 
 
-            # Send the packet
             super().send(packet)
 
-            # Sleep based on the bit value
             if bit == "0":
                 sleep(send_0_wait)  # for 0
             else:
                 sleep(send_1_wait)  # for 1
 
-        # Send a stopping signal (special packet)
         super().send(Ether(dst = "ff:ff:ff:ff:ff:ff") / ARP(pdst="172.18.0.3"))
-        sleep(0.2)  # Ensure the receiver identifies the end of the message
+        sleep(0.2)
 
     def receive(self, log_file_name, upper_boundary_0, upper_boundary_1):
         """
-        Receive and decode the covert message from ARP packets.
+        Receive and decode the covert message from ARP packets (1 packet at a time). 
+        Deduce the bit value from the wait time between packets and check for the end of message 
+        at each byte received.
 
         Args:
-            parameter1: Placeholder parameter.
-            parameter2: Placeholder parameter.
-            parameter3: Placeholder parameter.
             log_file_name (str): Name of the log file to record the received message.
+            upper_boundary_0: The upper boundary of wait time (in milliseconds) to interpret the bit as 0.
+            upper_boundary_1: The upper boundary of wait time (in milliseconds) to interpret the bit as 1.
         """
         received_message = ""
 
         packet_list = sniff(filter="arp", iface="eth0", count=1)
+        start_time = time()
         last_time = time()
-        print("ilk mesaj geldi")
         while True:
             packet_list = sniff(filter="arp", iface="eth0", count=1)
             packet = packet_list[0]
@@ -61,9 +59,9 @@ class MyCovertChannel(CovertChannelBase):
             inter_arrival_time = current_time - last_time
             last_time = current_time
 
-            if inter_arrival_time < upper_boundary_0:  # Less than 50 ms = 0
+            if inter_arrival_time < upper_boundary_0:
                 received_message += "0"
-            elif inter_arrival_time < upper_boundary_1:  # Between 50-150 ms = 1
+            elif inter_arrival_time < upper_boundary_1:
                 received_message += "1"
             else:
                 # Stop on long delay (end of message)
@@ -76,10 +74,14 @@ class MyCovertChannel(CovertChannelBase):
 
                 print(char)
 
-                if char == ".":
-                    # Stop character received
-                    print("Stop character received\n")
+                if char == ".": # Stop character received
                     break
+
+        end_time = time()
+
+        capacity = 128/(end_time-start_time)
+
+        print(f"covert channel capacity:{capacity} bit/sec")
         
         decoded_message = "".join(
             self.convert_eight_bits_to_character(received_message[i:i+8]) 
