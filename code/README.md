@@ -9,14 +9,14 @@ The `MyCovertChannel` class leverages a covert timing channel, where data is enc
 
 ---
 
-## Sending a Message: `send`
+## `send`
 
 ### Purpose
 - Encode a random binary message into timing delays between ARP packets.
 - Transmit the encoded message to a receiver.
 
 ### How it Works
-- A random binary message is generated using a base class function, and the message is logged to a specified file.
+- A random binary message is generated using a base class function, and the message is logged to a specified file provided in `config.json`.
 - For each bit in the binary message:
   - An ARP packet (Ethernet broadcast with a fixed destination IP) is sent.
   - A delay follows the packet. The delay duration (`send_0_wait` for "0" and `send_1_wait` for "1") encodes the binary data.
@@ -27,14 +27,9 @@ The `MyCovertChannel` class leverages a covert timing channel, where data is enc
 - `send_0_wait`: Delay in milliseconds to represent bit "0".
 - `send_1_wait`: Delay in milliseconds to represent bit "1".
 
-### Limitations
-- **Network Delay**: Real-world network delays could introduce variability in timing, affecting decoding accuracy.
-- **Timing Resolution**: The system clock’s resolution limits precision for very short delays.
-- **Buffering**: Network buffers could affect the packet timing observed by the receiver.
-
 ---
 
-## Receiving a Message: `receive`
+## `receive`
 
 ### Purpose
 - Decode the binary message by analyzing packet inter-arrival times.
@@ -50,30 +45,27 @@ The `MyCovertChannel` class leverages a covert timing channel, where data is enc
 - `upper_boundary_0`: Maximum delay (in milliseconds) for interpreting a "0".
 - `upper_boundary_1`: Maximum delay (in milliseconds) for interpreting a "1".
 
-### Limitations
-- **Threshold Calibration**: Upper boundaries must be tuned to the system and environment to account for variability in delays.
-- **Packet Loss**: Any missed packet could desynchronize decoding.
-- **Noise in Timing**: Non-covert traffic could affect measured timings.
-
 ---
 
 ## Covert Channel Capacity
 
-- The capacity, in bits per second, is calculated by dividing the total bits (128 in this example) by the transmission time.
-- A faster decoding process and minimal network delays improve capacity, while noisy environments reduce it.
+- The capacity, in bits per second, is calculated by using a sample 128 bit message, tracking the time between the first package received and the last, and dividing the time by 128 to find the covert channel capacity.
+- We found the largest possible covert channel capacity as ?? bits/sec by setting our thresholds as below:
+
+send_0_wait:
+send_1_wait:
+
+upper_boundary_0:
+upper_boundary_1:
+
+Smaller threshold or wait values resulted in message corruptions.
+
 
 ---
 
-## Logging and Debugging
-
-- Sent and received messages are logged for validation and debugging.
-- To analyze live traffic, tools like TShark can be used, as recommended in the instructions.
-
----
-
-## Practical Notes
+## Notes
 
 - **Docker Environment**: Ensure the code runs in the provided container environment to avoid compatibility issues.
 - **Parameters in `config.json`**: All delay thresholds and log filenames must be added to the configuration file for automated testing.
 
-This implementation creatively utilizes inter-arrival timings, adhering to the constraints and objectives of covert channel communication. Proper parameter tuning and environment control are crucial for achieving reliable and high-capacity communication.
+This implementation utilizes inter-arrival timings, adhering to the constraints and objectives of covert channel communication. Proper parameter tuning and environment control are crucial for achieving reliable and high-capacity communication.
