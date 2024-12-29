@@ -52,12 +52,10 @@ The `MyCovertChannel` class leverages a covert timing channel, where data is enc
 - The capacity, in bits per second, is calculated by using a sample 128 bit message, tracking the time between the first package received and the last, and dividing the time by 128 to find the covert channel capacity.
 - We found the largest possible covert channel capacity as ?? bits/sec by setting our thresholds as below:
 
-send_0_wait: 0.1
-
+send_0_wait: 0.1  
 send_1_wait: 0.4
 
-upper_boundary_0: 0.3
-
+upper_boundary_0: 0.3  
 upper_boundary_1: 1
 
 Smaller threshold or wait values resulted in message corruptions.
