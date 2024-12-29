@@ -53,9 +53,11 @@ The `MyCovertChannel` class leverages a covert timing channel, where data is enc
 - We found the largest possible covert channel capacity as ?? bits/sec by setting our thresholds as below:
 
 send_0_wait: 0.1
+
 send_1_wait: 0.4
 
 upper_boundary_0: 0.3
+
 upper_boundary_1: 1
 
 Smaller threshold or wait values resulted in message corruptions.
