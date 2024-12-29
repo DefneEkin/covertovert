@@ -50,11 +50,9 @@ class MyCovertChannel(CovertChannelBase):
         received_message = ""
 
         packet_list = sniff(filter="arp", iface="eth0", count=1)
-        start_time = time()
         last_time = time()
         while True:
             packet_list = sniff(filter="arp", iface="eth0", count=1)
-            packet = packet_list[0]
             current_time = time()
             inter_arrival_time = current_time - last_time
             last_time = current_time
@@ -72,16 +70,8 @@ class MyCovertChannel(CovertChannelBase):
                 byte = received_message[-8:]
                 char = self.convert_eight_bits_to_character(byte)
 
-                print(char)
-
                 if char == ".": # Stop character received
                     break
-
-        end_time = time()
-
-        capacity = 128/(end_time-start_time)
-
-        print(f"covert channel capacity:{capacity} bit/sec")
         
         decoded_message = "".join(
             self.convert_eight_bits_to_character(received_message[i:i+8]) 
